@@ -3,9 +3,12 @@ import random
 import time
 from datetime import date, timedelta
 
+import requests
 from tqdm import tqdm
 
 from src.Utils.tools import get_json_data, to_data_frame
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 url = 'https://stats.nba.com/stats/' \
       'leaguedashteamstats?Conference=&' \
@@ -46,12 +49,12 @@ for season1 in tqdm(season):
                 real_date = date(year=end_year_pointer, month=month1, day=day1) + timedelta(days=1)
                 general_df['Date'] = str(real_date)
 
-                directory2 = os.fsdecode('../../Team-Data')
+                team_data_dir = os.path.join(PROJECT_ROOT, 'Team-Data')
                 x = str(real_date).split('-')
 
-                name = directory2 + '/' + '{}-{}-{}'.format(str(int(x[1])), str(int(x[2])), season1) + '.xlsx'
+                name = os.path.join(team_data_dir, '{}-{}-{}.xlsx'.format(str(int(x[1])), str(int(x[2])), season1))
                 general_df.to_excel(name)
-            except:
+            except (ValueError, KeyError, requests.exceptions.RequestException):
                 continue
             time.sleep(random.randint(2, 4))
     year_count += 1
