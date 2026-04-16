@@ -25,13 +25,15 @@ data_headers = {
 
 
 def get_json_data(url):
-    raw_data = requests.get(url, headers=data_headers)
+    raw_data = requests.get(url, headers=data_headers, timeout=30)
+    raw_data.raise_for_status()
     json = raw_data.json()
     return json.get('resultSets')
 
 
 def get_todays_games_json(url):
-    raw_data = requests.get(url, headers=games_header)
+    raw_data = requests.get(url, headers=games_header, timeout=30)
+    raw_data.raise_for_status()
     json = raw_data.json()
     return json.get('gs').get('g')
 

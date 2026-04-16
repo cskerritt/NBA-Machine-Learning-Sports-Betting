@@ -3,7 +3,8 @@ import pandas as pd
 from tqdm import tqdm
 from src.Utils.Dictionaries import team_codes
 
-directory = os.fsdecode('../../Odds-Data')
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+directory = os.path.join(PROJECT_ROOT, 'Odds-Data')
 
 for file in tqdm(os.listdir(directory)):
     filename = os.fsdecode(file)
@@ -59,7 +60,7 @@ for file in tqdm(os.listdir(directory)):
                     'Points': points,
                     'Win_Margin': margin
                 }
-                x = x.append(temp, ignore_index=True)
+                x = pd.concat([x, pd.DataFrame([temp])], ignore_index=True)
                 count += 1
                 date = ''
                 home = ''
@@ -70,6 +71,6 @@ for file in tqdm(os.listdir(directory)):
                 ml_away = ''
                 points = ''
                 margin = ''
-        directory2 = os.fsdecode('../../Odds-Data/Odds-Data-Clean')
-        name = directory2 + '/' + year + '.xlsx'
+        clean_dir = os.path.join(PROJECT_ROOT, 'Odds-Data', 'Odds-Data-Clean')
+        name = os.path.join(clean_dir, year + '.xlsx')
         x.to_excel(name)
