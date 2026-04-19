@@ -1,8 +1,16 @@
+import os
+import random
 import time
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
+
+SEED = 42
+os.environ['PYTHONHASHSEED'] = str(SEED)
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
 
 current_time = str(time.time())
 

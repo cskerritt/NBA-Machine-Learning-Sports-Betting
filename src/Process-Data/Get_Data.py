@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import time
@@ -7,6 +8,9 @@ import requests
 from tqdm import tqdm
 
 from src.Utils.tools import get_json_data, to_data_frame
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -54,7 +58,11 @@ for season1 in tqdm(season):
 
                 name = os.path.join(team_data_dir, '{}-{}-{}.xlsx'.format(str(int(x[1])), str(int(x[2])), season1))
                 general_df.to_excel(name)
-            except (ValueError, KeyError, requests.exceptions.RequestException):
+            except (ValueError, KeyError, requests.exceptions.RequestException) as exc:
+                logger.warning(
+                    "Skipping %s-%s-%s (%s): %s",
+                    month1, day1, end_year_pointer, season1, exc,
+                )
                 continue
             time.sleep(random.randint(2, 4))
     year_count += 1

@@ -41,8 +41,14 @@ def createTodaysGames(games, df, odds):
             home_team_odds.append(input(home_team + ' odds: '))
             away_team_odds.append(input(away_team + ' odds: '))
 
-        home_team_series = df.iloc[team_index_current.get(home_team)]
-        away_team_series = df.iloc[team_index_current.get(away_team)]
+        for team in (home_team, away_team):
+            if team not in team_index_current:
+                raise KeyError(
+                    f"Unknown team name {team!r}. Valid team names: "
+                    f"{sorted(team_index_current.keys())}"
+                )
+        home_team_series = df.iloc[team_index_current[home_team]]
+        away_team_series = df.iloc[team_index_current[away_team]]
         stats = pd.concat([home_team_series, away_team_series])
         match_data.append(stats)
 

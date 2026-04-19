@@ -1,5 +1,13 @@
-import requests
+import logging
+
 import pandas as pd
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+logger = logging.getLogger(__name__)
+
+REQUEST_TIMEOUT_SECONDS = 30
 
 games_header = {
     'user-agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -24,18 +32,34 @@ data_headers = {
 }
 
 
+def _build_session():
+    session = requests.Session()
+    retry = Retry(
+        total=4,
+        backoff_factor=2,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(['GET']),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
+
+_session = _build_session()
+
+
 def get_json_data(url):
-    raw_data = requests.get(url, headers=data_headers, timeout=30)
+    raw_data = _session.get(url, headers=data_headers, timeout=REQUEST_TIMEOUT_SECONDS)
     raw_data.raise_for_status()
-    json = raw_data.json()
-    return json.get('resultSets')
+    return raw_data.json().get('resultSets')
 
 
 def get_todays_games_json(url):
-    raw_data = requests.get(url, headers=games_header, timeout=30)
+    raw_data = _session.get(url, headers=games_header, timeout=REQUEST_TIMEOUT_SECONDS)
     raw_data.raise_for_status()
-    json = raw_data.json()
-    return json.get('gs').get('g')
+    return raw_data.json().get('gs').get('g')
 
 
 def to_data_frame(data):

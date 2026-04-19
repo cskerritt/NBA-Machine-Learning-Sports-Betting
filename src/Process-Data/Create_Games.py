@@ -60,8 +60,11 @@ for season in tqdm(season_array):
                 OU_Cover.append(2)
 
             team_index = season_to_index.get(season, team_index_14)
-            home_team_series = data_frame.iloc[team_index.get(home_team)]
-            away_team_series = data_frame.iloc[team_index.get(away_team)]
+            if home_team not in team_index or away_team not in team_index:
+                # Skip games whose teams aren't in the season's index (e.g. relocations).
+                continue
+            home_team_series = data_frame.iloc[team_index[home_team]]
+            away_team_series = data_frame.iloc[team_index[away_team]]
 
             game = pd.concat([home_team_series, away_team_series])
             games.append(game)
