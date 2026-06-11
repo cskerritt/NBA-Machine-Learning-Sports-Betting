@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sports Edge — Today's Predictions</title>
+<style>
+  :root { --bg:#0f1419; --card:#1a2129; --text:#e6e6e6; --muted:#8b98a5;
+          --green:#2ecc71; --red:#e74c3c; --accent:#3498db; }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+         margin:0; padding:2rem 1rem; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size:1.6rem; } h1 span { color:var(--accent); }
+  form { display:flex; gap:.75rem; align-items:center; margin:1rem 0 1.5rem; flex-wrap:wrap; }
+  select,input,button { background:var(--card); color:var(--text); border:1px solid #2c3a47;
+         border-radius:6px; padding:.5rem .75rem; font-size:1rem; }
+  button { background:var(--accent); border:none; cursor:pointer; font-weight:600; }
+  .card { background:var(--card); border-radius:10px; padding:1rem 1.25rem; margin-bottom:1rem; }
+  .matchup { font-size:1.1rem; font-weight:600; margin-bottom:.4rem; }
+  .row { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
+         color:var(--muted); font-size:.95rem; }
+  .pick { color:var(--accent); font-weight:600; }
+  .ev-pos { color:var(--green); font-weight:600; }
+  .ev-none { color:var(--muted); }
+  .bar { height:8px; border-radius:4px; background:#2c3a47; margin:.6rem 0; overflow:hidden; }
+  .bar > div { height:100%; background:var(--accent); }
+  .warn { background:#3d2f14; border:1px solid #8a6d1a; border-radius:8px;
+          padding:.6rem 1rem; margin-bottom:1rem; color:#e8c468; }
+  .err { background:#3d1414; border:1px solid #8a1a1a; color:#e86868; }
+  footer { color:var(--muted); font-size:.8rem; margin-top:2rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sports <span>Edge</span> — Today's Predictions</h1>
+
+  <form method="get">
+    <label>Sport
+      <select name="sport">
+        {% for key, cfg in sports.items() %}
+          <option value="{{ key }}" {% if key == sport %}selected{% endif %}>{{ cfg.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Bankroll $
+      <input type="number" name="bankroll" value="{{ bankroll|int }}" min="1" style="width:7rem">
+    </label>
+    <button type="submit">Refresh</button>
+  </form>
+
+  {% if error %}<div class="warn err">{{ error }}</div>{% endif %}
+  {% if odds_error %}<div class="warn">Odds unavailable: {{ odds_error }}</div>{% endif %}
+
+  {% if not predictions and not error %}
+    <div class="card">No games scheduled today.</div>
+  {% endif %}
+
+  {% for p in predictions %}
+  <div class="card">
+    <div class="matchup">{{ p.away_team }} @ {{ p.home_team }}</div>
+    <div class="bar"><div style="width: {{ (p.home_win_prob * 100)|round(1) }}%"></div></div>
+    <div class="row">
+      <span>Pick: <span class="pick">{{ p.pick }}</span></span>
+      <span>{{ p.home_team }} win: {{ "%.1f"|format(p.home_win_prob * 100) }}%</span>
+      <span>Elo: {{ "%.1f"|format(p.elo_prob * 100) }}%</span>
+    </div>
+    {% if p.home_ml is not none %}
+    <div class="row" style="margin-top:.4rem">
+      <span>{{ p.home_team }} {{ "%+d"|format(p.home_ml|int) }} ({{ p.home_book }})</span>
+      <span>{{ p.away_team }} {{ "%+d"|format(p.away_ml|int) }} ({{ p.away_book }})</span>
+      <span>Market home prob: {{ "%.1f"|format(p.home_fair_prob * 100) }}%</span>
+    </div>
+    <div class="row" style="margin-top:.4rem">
+      {% if p.best_bet %}
+        {% if p.home_ev >= p.away_ev %}
+          <span class="ev-pos">+EV: {{ p.home_team }} — EV ${{ "%.2f"|format(p.home_ev) }}/100,
+            stake ${{ "%.0f"|format(p.home_kelly * bankroll) }}</span>
+        {% else %}
+          <span class="ev-pos">+EV: {{ p.away_team }} — EV ${{ "%.2f"|format(p.away_ev) }}/100,
+            stake ${{ "%.0f"|format(p.away_kelly * bankroll) }}</span>
+        {% endif %}
+      {% else %}
+        <span class="ev-none">No +EV bet at current prices.</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <footer>
+    Predictions are statistical estimates, not guarantees. Bet responsibly and only what
+    you can afford to lose. Problem gambling help: 1-800-GAMBLER.
+  </footer>
+</div>
+</body>
+</html>

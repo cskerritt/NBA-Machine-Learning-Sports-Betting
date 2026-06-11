@@ -105,3 +105,7 @@ venv.bak/
 
 .idea
 .DS_Store
+
+# Sports Edge local artifacts
+data/
+models_store/
