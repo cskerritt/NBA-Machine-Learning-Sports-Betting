@@ -42,6 +42,24 @@ def test_replay_state_matches_incremental_build():
     assert min(state.elo.ratings.values()) < 1480
 
 
+def test_streak_and_season_reset():
+    games = synthetic_seasons([2022, 2023])
+    df = build_dataset(games, NBA)
+    # Streaks stay bounded by games played and reset between seasons.
+    assert df["home_streak"].abs().max() <= df["games_played_home"].max()
+    first_2023 = df[df["season"] == 2023].iloc[0]
+    assert first_2023["home_streak"] == 0.0
+    assert first_2023["home_season_winpct"] == 0.5  # neutral prior at season start
+
+
+def test_score_targets_present():
+    games = synthetic_seasons([2022])
+    df = build_dataset(games, NBA)
+    assert (df["total"] > 0).all()
+    assert (df["margin"] != 0).all()
+    assert ((df["margin"] > 0) == (df["home_win"] == 1)).all()
+
+
 def test_rest_days_capped():
     games = synthetic_seasons([2022])
     df = build_dataset(games, NBA)

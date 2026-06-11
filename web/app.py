@@ -1,4 +1,4 @@
-"""Flask dashboard for today's MLB/NBA predictions."""
+"""Flask dashboard for today's MLB / NBA / NFL / NHL predictions."""
 
 from flask import Flask, render_template, request
 
@@ -9,13 +9,10 @@ app = Flask(__name__)
 
 def _load_predictions(sport_key: str, bankroll: float):
     cfg = get_sport(sport_key)
-    if cfg.key == "mlb":
-        from sports_edge.data import mlb as fetcher
-    else:
-        from sports_edge.data import nba as fetcher
+    from sports_edge.data.sources import todays_games
     from sports_edge.models.predict import predict_games
 
-    upcoming = fetcher.todays_games()
+    upcoming = todays_games(cfg)
     if not upcoming:
         return [], None
 

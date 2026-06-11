@@ -67,6 +67,15 @@ def test_train_and_predict(store, models_dir):
     # EV math is consistent with the probability.
     assert (p.home_ev > 0) == (p.home_win_prob > 120 / 220)
     assert p.pick in ("Team A", "Team B")
+    # Score predictions are plausible for the synthetic league (~100-120 pts).
+    assert 80 < p.pred_home_score < 140
+    assert 80 < p.pred_away_score < 140
+    assert p.pred_total == pytest.approx(p.pred_home_score + p.pred_away_score)
+    assert p.confidence in ("STRONG", "LEAN", "PASS")
+    assert p.home_form["elo_rank"] is not None
+    assert "-" in p.home_form["last_n"]
+    assert result.blend_weight is not None and 0.0 <= result.blend_weight <= 1.0
+    assert result.margin_mae > 0 and result.total_mae > 0
 
 
 def test_predict_without_odds(store, models_dir):

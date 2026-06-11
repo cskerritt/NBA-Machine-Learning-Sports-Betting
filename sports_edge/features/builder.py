@@ -16,6 +16,7 @@ def build_dataset(games: list[Game], cfg: SportConfig) -> pd.DataFrame:
     state = LeagueState(cfg)
     rows = []
     for g in games:
+        state.rollover_if_new_season(g.season)
         feats = state.features_for(g.home_team, g.away_team, g.date)
         feats.update({
             "date": g.date,
@@ -23,6 +24,8 @@ def build_dataset(games: list[Game], cfg: SportConfig) -> pd.DataFrame:
             "home_team": g.home_team,
             "away_team": g.away_team,
             "home_win": 1 if g.home_win else 0,
+            "margin": g.margin,
+            "total": g.home_score + g.away_score,
             "warm": int(
                 feats["games_played_home"] >= cfg.min_history_games
                 and feats["games_played_away"] >= cfg.min_history_games
@@ -31,7 +34,8 @@ def build_dataset(games: list[Game], cfg: SportConfig) -> pd.DataFrame:
         rows.append(feats)
         state.update(g)
     df = pd.DataFrame(rows)
-    return df[["date", "season", "home_team", "away_team", "home_win", "warm"] + FEATURE_NAMES]
+    return df[["date", "season", "home_team", "away_team",
+               "home_win", "margin", "total", "warm"] + FEATURE_NAMES]
 
 
 def replay_state(games: list[Game], cfg: SportConfig) -> LeagueState:

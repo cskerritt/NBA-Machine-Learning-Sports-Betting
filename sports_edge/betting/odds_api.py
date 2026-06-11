@@ -4,6 +4,7 @@ Set THE_ODDS_API_KEY in your environment, or pass --api-key on the CLI.
 """
 
 import os
+import unicodedata
 
 import requests
 
@@ -12,16 +13,24 @@ from sports_edge.config import SportConfig
 BASE_URL = "https://api.the-odds-api.com/v4/sports/{sport}/odds"
 TIMEOUT = 30
 
-# Map odds-api team names to the names used by our data sources.
+# Map known odds-api spellings to the names used by our data sources.
 TEAM_ALIASES = {
-    "LA Clippers": "Los Angeles Clippers",
-    "Oakland Athletics": "Athletics",
-    "Los Angeles Angels of Anaheim": "Los Angeles Angels",
+    "la clippers": "los angeles clippers",
+    "oakland athletics": "athletics",
+    "los angeles angels of anaheim": "los angeles angels",
+    "st louis cardinals": "st. louis cardinals",
+    "st louis blues": "st. louis blues",
+    "washington football team": "washington commanders",
 }
 
 
-def normalize_team(name: str) -> str:
-    return TEAM_ALIASES.get(name, name)
+def team_key(name: str) -> str:
+    """Canonical key for matching team names across data sources:
+    accent-stripped, lowercase, no periods, aliases applied."""
+    s = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    s = " ".join(s.lower().replace(".", "").split())
+    s = TEAM_ALIASES.get(s, s)
+    return s.replace(".", "")
 
 
 def fetch_moneylines(cfg: SportConfig, api_key: str | None = None,
@@ -52,19 +61,19 @@ def fetch_moneylines(cfg: SportConfig, api_key: str | None = None,
 
     odds = {}
     for event in resp.json():
-        home = normalize_team(event["home_team"])
-        away = normalize_team(event["away_team"])
+        home, away = event["home_team"], event["away_team"]
+        hk, ak = team_key(home), team_key(away)
         best = {"home_ml": None, "away_ml": None, "home_book": None, "away_book": None}
         for book in event.get("bookmakers", []):
             for market in book.get("markets", []):
                 if market["key"] != "h2h":
                     continue
                 for outcome in market["outcomes"]:
-                    team = normalize_team(outcome["name"])
+                    tk = team_key(outcome["name"])
                     price = outcome["price"]
-                    if team == home and (best["home_ml"] is None or price > best["home_ml"]):
+                    if tk == hk and (best["home_ml"] is None or price > best["home_ml"]):
                         best["home_ml"], best["home_book"] = price, book["key"]
-                    elif team == away and (best["away_ml"] is None or price > best["away_ml"]):
+                    elif tk == ak and (best["away_ml"] is None or price > best["away_ml"]):
                         best["away_ml"], best["away_book"] = price, book["key"]
         if best["home_ml"] is not None and best["away_ml"] is not None:
             odds[(home, away)] = best

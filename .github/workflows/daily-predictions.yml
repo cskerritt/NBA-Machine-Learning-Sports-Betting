@@ -1,0 +1,61 @@
+name: Daily predictions
+
+on:
+  schedule:
+    # 14:00 UTC = morning in the US, after previous night's games are final
+    # and before the day's slates begin.
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+    inputs:
+      sports:
+        description: "Comma-separated sports (mlb,nba,nfl,nhl); empty = all"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Persist the SQLite game database between runs so each day only
+      # re-downloads the in-progress season.
+      - name: Restore game database
+        uses: actions/cache@v4
+        with:
+          path: data
+          key: games-db-${{ github.run_id }}
+          restore-keys: games-db-
+
+      - name: Run daily pipeline
+        env:
+          THE_ODDS_API_KEY: ${{ secrets.THE_ODDS_API_KEY }}
+        run: |
+          python main.py daily --sports "${{ inputs.sports || 'mlb,nba,nfl,nhl' }}"
+
+      - name: Publish job summary
+        if: always()
+        run: |
+          for f in reports/latest/*.md; do
+            [ -e "$f" ] && cat "$f" >> "$GITHUB_STEP_SUMMARY"
+          done || true
+
+      - name: Commit reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git diff --cached --quiet && echo "No report changes" && exit 0
+          git commit -m "Daily predictions for $(date -u +%F) [skip ci]"
+          git push
