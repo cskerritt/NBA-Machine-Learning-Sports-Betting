@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS games (
     PRIMARY KEY (sport, game_id)
 );
 CREATE INDEX IF NOT EXISTS idx_games_sport_date ON games (sport, date);
+CREATE TABLE IF NOT EXISTS meta (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
 
 
@@ -82,6 +86,24 @@ class GameStore:
     def count(self, sport: str) -> int:
         cur = self.conn.execute("SELECT COUNT(*) FROM games WHERE sport = ?", (sport,))
         return cur.fetchone()[0]
+
+    def ensure_source(self, sport: str, source: str) -> bool:
+        """Record which data source a sport's games came from. If it changed
+        (game ids are source-specific, so mixing would duplicate games),
+        purge that sport's games for a clean refetch. Returns True if purged."""
+        cur = self.conn.execute(
+            "SELECT value FROM meta WHERE key = ?", (f"source:{sport}",))
+        row = cur.fetchone()
+        purged = False
+        with self.conn:
+            if row is None or row[0] != source:
+                if self.count(sport):
+                    self.conn.execute("DELETE FROM games WHERE sport = ?", (sport,))
+                    purged = True
+                self.conn.execute(
+                    "INSERT OR REPLACE INTO meta VALUES (?, ?)",
+                    (f"source:{sport}", source))
+        return purged
 
     def close(self):
         self.conn.close()
