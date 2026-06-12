@@ -12,6 +12,14 @@ def _fmt_ml(ml: float | None) -> str:
     return f"{ml:+.0f}" if ml is not None else "-"
 
 
+def form_line(team: str, form: dict) -> str:
+    """One-line team form summary shared by the CLI and Markdown reports."""
+    return (f"{team}: Elo {form.get('elo')} (#{form.get('elo_rank')}), "
+            f"last {form.get('last_n')}, streak {form.get('streak')}, "
+            f"season {form.get('season_record')}, "
+            f"{form.get('ppg')} for / {form.get('papg')} against")
+
+
 def _game_md(p: Prediction, bankroll: float) -> str:
     lines = [
         f"### {p.away_team} @ {p.home_team}",
@@ -26,12 +34,7 @@ def _game_md(p: Prediction, bankroll: float) -> str:
     ]
     for label, team, form in (("Home", p.home_team, p.home_form),
                               ("Away", p.away_team, p.away_form)):
-        lines.append(
-            f"- {label} form — {team}: Elo {form.get('elo')} (#{form.get('elo_rank')}), "
-            f"last {form.get('last_n')}, streak {form.get('streak')}, "
-            f"season {form.get('season_record')}, "
-            f"{form.get('ppg')} for / {form.get('papg')} against"
-        )
+        lines.append(f"- {label} form — {form_line(team, form)}")
     if p.home_ml is not None:
         lines.append(
             f"- Odds: {p.home_team} {_fmt_ml(p.home_ml)} ({p.home_book}) | "
@@ -39,11 +42,9 @@ def _game_md(p: Prediction, bankroll: float) -> str:
             f"market home prob {p.home_fair_prob:.1%}, edge {p.edge:+.1%}"
         )
         if p.best_bet:
-            ev = p.home_ev if p.best_bet == p.home_team else p.away_ev
-            kelly = p.home_kelly if p.best_bet == p.home_team else p.away_kelly
-            lines.append(f"- **+EV bet: {p.best_bet}** — EV ${ev:+.2f}/100, "
-                         f"Kelly stake ${kelly * bankroll:.0f} "
-                         f"({kelly:.1%} of ${bankroll:.0f})")
+            lines.append(f"- **+EV bet: {p.best_bet}** — EV ${p.best_bet_ev:+.2f}/100, "
+                         f"Kelly stake ${p.best_bet_kelly * bankroll:.0f} "
+                         f"({p.best_bet_kelly:.1%} of ${bankroll:.0f})")
         else:
             lines.append("- No +EV bet at current prices.")
     lines.append("")
@@ -73,9 +74,8 @@ def write_report(cfg: SportConfig, preds: list[Prediction], day: date,
     if bets:
         md += ["## Best bets", ""]
         for p in sorted(bets, key=lambda p: -(p.edge or 0)):
-            ev = p.home_ev if p.best_bet == p.home_team else p.away_ev
             md.append(f"- **{p.best_bet}** ({p.away_team} @ {p.home_team}) — "
-                      f"edge {p.edge:+.1%}, EV ${ev:+.2f}/100, {p.confidence}")
+                      f"edge {p.edge:+.1%}, EV ${p.best_bet_ev:+.2f}/100, {p.confidence}")
         md.append("")
     md += ["## All games", ""]
     md += [_game_md(p, bankroll) for p in preds]

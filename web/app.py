@@ -7,24 +7,9 @@ from sports_edge.config import SPORTS, get_sport
 app = Flask(__name__)
 
 
-def _load_predictions(sport_key: str, bankroll: float):
-    cfg = get_sport(sport_key)
-    from sports_edge.data.sources import todays_games
-    from sports_edge.models.predict import predict_games
-
-    upcoming = todays_games(cfg)
-    if not upcoming:
-        return [], None
-
-    odds, odds_error = None, None
-    try:
-        from sports_edge.betting.odds_api import fetch_moneylines
-        odds = fetch_moneylines(cfg)
-    except Exception as e:
-        odds_error = str(e)
-
-    preds = predict_games(cfg, upcoming, odds=odds)
-    return preds, odds_error
+def _load_predictions(sport_key: str):
+    from sports_edge.pipeline import predict_today
+    return predict_today(get_sport(sport_key))
 
 
 @app.route("/")
@@ -34,7 +19,7 @@ def index():
     error = None
     preds, odds_error = [], None
     try:
-        preds, odds_error = _load_predictions(sport, bankroll)
+        preds, odds_error = _load_predictions(sport)
     except Exception as e:
         error = str(e)
     return render_template(

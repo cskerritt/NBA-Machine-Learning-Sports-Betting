@@ -98,13 +98,8 @@
     </div>
     <div class="row">
       {% if p.best_bet %}
-        {% if p.home_ev >= p.away_ev %}
-          <span class="ev-pos">+EV: {{ p.home_team }} — EV ${{ "%.2f"|format(p.home_ev) }}/100,
-            stake ${{ "%.0f"|format(p.home_kelly * bankroll) }}</span>
-        {% else %}
-          <span class="ev-pos">+EV: {{ p.away_team }} — EV ${{ "%.2f"|format(p.away_ev) }}/100,
-            stake ${{ "%.0f"|format(p.away_kelly * bankroll) }}</span>
-        {% endif %}
+        <span class="ev-pos">+EV: {{ p.best_bet }} — EV ${{ "%.2f"|format(p.best_bet_ev) }}/100,
+          stake ${{ "%.0f"|format(p.best_bet_kelly * bankroll) }}</span>
       {% else %}
         <span class="ev-none">No +EV bet at current prices.</span>
       {% endif %}

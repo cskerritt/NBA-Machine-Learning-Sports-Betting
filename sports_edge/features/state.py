@@ -24,7 +24,7 @@ FEATURE_NAMES = [
 ]
 
 
-def _parse_date(s: str) -> date:
+def parse_date(s: str) -> date:
     return datetime.strptime(s[:10], "%Y-%m-%d").date()
 
 
@@ -67,8 +67,10 @@ class _TeamForm:
 
     def record(self, won: bool, margin: int, scored: int, allowed: int):
         self.results.append((won, margin, scored, allowed))
-        self.streak = self.streak + 1 if won and self.streak >= 0 else \
-            (self.streak - 1 if not won and self.streak <= 0 else (1 if won else -1))
+        if won:
+            self.streak = self.streak + 1 if self.streak > 0 else 1
+        else:
+            self.streak = self.streak - 1 if self.streak < 0 else -1
         self.season_wins += 1 if won else 0
         self.season_games += 1
         self.games_played += 1
@@ -98,7 +100,7 @@ class LeagueState:
 
     def features_for(self, home: str, away: str, game_date: str) -> dict[str, float]:
         """Pre-game features. Must be called BEFORE update() for that game."""
-        d = _parse_date(game_date)
+        d = parse_date(game_date)
         hf, af = self._form(home), self._form(away)
         rest_h, rest_a = self._rest_days(hf, d), self._rest_days(af, d)
         return {
@@ -162,7 +164,7 @@ class LeagueState:
 
         self.elo.update(game.home_team, game.away_team, game.home_score, game.away_score)
 
-        d = _parse_date(game.date)
+        d = parse_date(game.date)
         hf, af = self._form(game.home_team), self._form(game.away_team)
         hf.record(game.home_win, game.margin, game.home_score, game.away_score)
         af.record(not game.home_win, -game.margin, game.away_score, game.home_score)

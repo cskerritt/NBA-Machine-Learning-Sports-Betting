@@ -7,6 +7,7 @@ from datetime import date
 from sports_edge.config import SPORTS, SportConfig
 from sports_edge.data.sources import todays_games, update_history
 from sports_edge.data.store import GameStore
+from sports_edge.pipeline import predict_slate
 
 
 @dataclass
@@ -17,6 +18,7 @@ class DailyResult:
     n_bets: int = 0
     report_md: str | None = None
     error: str | None = None
+    odds_error: str | None = None
     fetched: dict = field(default_factory=dict)
 
 
@@ -24,7 +26,6 @@ def run_sport(cfg: SportConfig, store: GameStore, day: date,
               retrain: bool = True, bankroll: float = 1000.0,
               api_key: str | None = None) -> DailyResult:
     from sports_edge.features.builder import build_dataset
-    from sports_edge.models.predict import predict_games
     from sports_edge.models.train import model_path, train
     from sports_edge.reports import write_report
 
@@ -41,14 +42,8 @@ def run_sport(cfg: SportConfig, store: GameStore, day: date,
             games = store.load_games(cfg.key)
             train(build_dataset(games, cfg), cfg)
 
-        odds = None
-        try:
-            from sports_edge.betting.odds_api import fetch_moneylines
-            odds = fetch_moneylines(cfg, api_key=api_key)
-        except Exception:
-            pass  # odds are optional; report still gets probabilities
-
-        preds = predict_games(cfg, upcoming, odds=odds, store=store)
+        preds, result.odds_error = predict_slate(cfg, upcoming, api_key=api_key,
+                                                 store=store)
         _, md_path = write_report(cfg, preds, day, bankroll=bankroll)
         result.n_games = len(preds)
         result.n_bets = sum(1 for p in preds if p.best_bet)

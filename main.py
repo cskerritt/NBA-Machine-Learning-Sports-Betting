@@ -65,6 +65,8 @@ def cmd_train(args):
 
 
 def _print_prediction(p, bankroll: float):
+    from sports_edge.reports import form_line
+
     tier_color = {"STRONG": Fore.GREEN, "LEAN": Fore.CYAN}.get(p.confidence, Fore.YELLOW)
     print(f"\n{p.away_team} @ {p.home_team}")
     print(f"  Pick:  {Fore.CYAN}{p.pick}{Style.RESET_ALL} ({p.pick_prob:.1%})  "
@@ -74,10 +76,7 @@ def _print_prediction(p, bankroll: float):
           f"{p.pred_away_score:.1f} {p.away_team}  "
           f"(margin {p.pred_margin:+.1f}, total {p.pred_total:.1f})")
     for team, form in ((p.home_team, p.home_form), (p.away_team, p.away_form)):
-        print(f"  Form:  {team}: Elo {form['elo']} (#{form['elo_rank']}), "
-              f"last {form['last_n']}, streak {form['streak']}, "
-              f"season {form['season_record']}, "
-              f"{form['ppg']}/{form['papg']} for/against")
+        print(f"  Form:  {form_line(team, form)}")
     if p.home_ev is not None:
         print(f"  Odds:  {p.home_team} {p.home_ml:+.0f} ({p.home_book})  |  "
               f"{p.away_team} {p.away_ml:+.0f} ({p.away_book})  "
@@ -94,24 +93,17 @@ def _print_prediction(p, bankroll: float):
 
 def cmd_predict(args):
     cfg = get_sport(args.sport)
-    from sports_edge.data.sources import todays_games
-    from sports_edge.models.predict import predict_games
+    from sports_edge.pipeline import predict_today
 
-    upcoming = todays_games(cfg)
-    if not upcoming:
+    preds, odds_error = predict_today(
+        cfg, with_odds=not args.no_odds, api_key=args.api_key,
+        bookmaker=args.book, kelly_multiplier=args.kelly)
+    if not preds:
         print(f"No {cfg.name} games scheduled today.")
         return
+    if odds_error:
+        print(Fore.YELLOW + f"Odds issue: {odds_error}" + Style.RESET_ALL)
 
-    odds = None
-    if not args.no_odds:
-        from sports_edge.betting.odds_api import fetch_moneylines
-        try:
-            odds = fetch_moneylines(cfg, api_key=args.api_key, bookmaker=args.book)
-        except Exception as e:
-            print(Fore.YELLOW + f"Odds unavailable ({e}); showing probabilities only."
-                  + Style.RESET_ALL)
-
-    preds = predict_games(cfg, upcoming, odds=odds, kelly_multiplier=args.kelly)
     print(f"\n{cfg.name} predictions for {preds[0].date}")
     print("=" * 78)
     for p in preds:
@@ -157,6 +149,8 @@ def cmd_daily(args):
         if r.status == "ok":
             print(Fore.GREEN + f"{name}: {r.n_games} games, {r.n_bets} +EV bets "
                   f"-> {r.report_md}" + Style.RESET_ALL)
+            if r.odds_error:
+                print(Fore.YELLOW + f"  odds issue: {r.odds_error}" + Style.RESET_ALL)
         elif r.status == "no-games":
             print(f"{name}: no games today")
         else:

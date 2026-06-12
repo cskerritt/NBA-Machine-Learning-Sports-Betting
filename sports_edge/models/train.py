@@ -83,13 +83,14 @@ def model_path(cfg: SportConfig) -> Path:
     return MODELS_DIR / f"{cfg.key}_moneyline.pkl"
 
 
-def _blend(p_model: np.ndarray, p_elo: np.ndarray, w: float) -> np.ndarray:
+def blend(p_model, p_elo, w: float):
+    """Final win probability: classifier blended with the Elo baseline."""
     return np.clip(w * p_model + (1.0 - w) * p_elo, 1e-6, 1 - 1e-6)
 
 
 def _best_blend_weight(p_model, p_elo, y) -> float:
     weights = np.arange(0.0, 1.01, 0.05)
-    losses = [log_loss(y, _blend(p_model, p_elo, w), labels=[0, 1]) for w in weights]
+    losses = [log_loss(y, blend(p_model, p_elo, w), labels=[0, 1]) for w in weights]
     return float(weights[int(np.argmin(losses))])
 
 
@@ -111,7 +112,7 @@ def train(df: pd.DataFrame, cfg: SportConfig, fast: bool = False) -> TrainResult
     y_test = y[split:]
 
     w = _best_blend_weight(p_test, p_elo, y_test)
-    p_blend = _blend(p_test, p_elo, w)
+    p_blend = blend(p_test, p_elo, w)
 
     margin_model = _make_regressor(fast)
     margin_model.fit(X[:split], df["margin"].to_numpy(dtype=float)[:split])
@@ -173,4 +174,11 @@ def load_model(cfg: SportConfig) -> dict:
             f"Run: python main.py train --sport {cfg.key}"
         )
     with open(path, "rb") as f:
-        return pickle.load(f)
+        bundle = pickle.load(f)
+    if bundle.get("feature_names") != FEATURE_NAMES:
+        raise ValueError(
+            f"Saved {cfg.name} model was trained on a different feature set; "
+            f"predictions would be misaligned. "
+            f"Retrain with: python main.py train --sport {cfg.key}"
+        )
+    return bundle

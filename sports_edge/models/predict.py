@@ -11,11 +11,11 @@ from sports_edge.betting.odds_math import (
     kelly_fraction,
     no_vig_probs,
 )
-from sports_edge.config import SportConfig
+from sports_edge.config import SportConfig, current_season
 from sports_edge.data.store import GameStore
 from sports_edge.features.builder import replay_state
-from sports_edge.features.state import FEATURE_NAMES
-from sports_edge.models.train import load_model
+from sports_edge.features.state import FEATURE_NAMES, parse_date
+from sports_edge.models.train import blend, load_model
 
 
 @dataclass
@@ -88,6 +88,19 @@ class Prediction:
             return None
         return self.home_team if self.home_ev >= self.away_ev else self.away_team
 
+    def _best_bet_field(self, home_value, away_value):
+        if self.best_bet is None:
+            return None
+        return home_value if self.best_bet == self.home_team else away_value
+
+    @property
+    def best_bet_ev(self) -> float | None:
+        return self._best_bet_field(self.home_ev, self.away_ev)
+
+    @property
+    def best_bet_kelly(self) -> float | None:
+        return self._best_bet_field(self.home_kelly, self.away_kelly)
+
     def to_dict(self) -> dict:
         d = {k: v for k, v in self.__dict__.items()}
         d.update({
@@ -121,11 +134,14 @@ def predict_games(cfg: SportConfig, upcoming: list[dict],
     preds = []
     for g in upcoming:
         home, away = g["home_team"], g["away_team"]
+        # If these games open a new season, apply between-season regression
+        # and form resets first — mirrors what build_dataset does in training.
+        state.rollover_if_new_season(current_season(cfg, parse_date(g["date"])))
         feats = state.features_for(home, away, g["date"])
         x = np.array([[feats[name] for name in FEATURE_NAMES]])
         p_model = float(model.predict_proba(x)[0, 1])
         p_elo = feats["elo_prob_home"]
-        p_home = float(np.clip(w * p_model + (1.0 - w) * p_elo, 0.001, 0.999))
+        p_home = float(blend(p_model, p_elo, w))
 
         margin = float(bundle["margin_model"].predict(x)[0])
         total = float(bundle["total_model"].predict(x)[0])
@@ -140,15 +156,19 @@ def predict_games(cfg: SportConfig, upcoming: list[dict],
         )
         o = odds_by_key.get((team_key(home), team_key(away)))
         if o:
-            pred.home_ml, pred.away_ml = o["home_ml"], o["away_ml"]
-            pred.home_book, pred.away_book = o.get("home_book"), o.get("away_book")
-            pred.home_fair_prob, _ = no_vig_probs(
-                american_to_implied_prob(pred.home_ml),
-                american_to_implied_prob(pred.away_ml),
-            )
-            pred.home_ev = expected_value(p_home, pred.home_ml)
-            pred.away_ev = expected_value(1 - p_home, pred.away_ml)
-            pred.home_kelly = kelly_fraction(p_home, pred.home_ml, kelly_multiplier)
-            pred.away_kelly = kelly_fraction(1 - p_home, pred.away_ml, kelly_multiplier)
+            try:
+                pred.home_fair_prob, _ = no_vig_probs(
+                    american_to_implied_prob(o["home_ml"]),
+                    american_to_implied_prob(o["away_ml"]),
+                )
+                pred.home_ev = expected_value(p_home, o["home_ml"])
+                pred.away_ev = expected_value(1 - p_home, o["away_ml"])
+                pred.home_kelly = kelly_fraction(p_home, o["home_ml"], kelly_multiplier)
+                pred.away_kelly = kelly_fraction(1 - p_home, o["away_ml"],
+                                                 kelly_multiplier)
+                pred.home_ml, pred.away_ml = o["home_ml"], o["away_ml"]
+                pred.home_book, pred.away_book = o.get("home_book"), o.get("away_book")
+            except (ValueError, KeyError, TypeError):
+                pass  # malformed odds for this game: keep probability-only output
         preds.append(pred)
     return preds

@@ -58,4 +58,4 @@ jobs:
           git add reports/
           git diff --cached --quiet && echo "No report changes" && exit 0
           git commit -m "Daily predictions for $(date -u +%F) [skip ci]"
-          git push
+          git push origin "HEAD:${{ github.ref_name }}"
