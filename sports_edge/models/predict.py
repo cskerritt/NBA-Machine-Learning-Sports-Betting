@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from sports_edge.betting.odds_api import team_key
+from sports_edge.teams import team_key
 from sports_edge.betting.odds_math import (
     american_to_implied_prob,
     expected_value,

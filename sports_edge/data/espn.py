@@ -12,8 +12,9 @@ TIMEOUT = 30
 
 # Regular-season calendar windows, by season starting year.
 SEASON_WINDOWS = {
-    "football/nfl": ((9, 1), (1, 15)),   # Sep 1 -> Jan 15 next year
-    "hockey/nhl": ((10, 1), (4, 30)),    # Oct 1 -> Apr 30 next year
+    "football/nfl": ((9, 1), (1, 15)),    # Sep 1 -> Jan 15 next year
+    "hockey/nhl": ((10, 1), (4, 30)),     # Oct 1 -> Apr 30 next year
+    "basketball/nba": ((10, 1), (4, 30)),  # Oct 1 -> Apr 30 next year
 }
 
 

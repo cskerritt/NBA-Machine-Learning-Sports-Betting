@@ -79,6 +79,55 @@ def test_current_season():
     assert current_season(NHL, date(2026, 10, 20)) == 2026
 
 
+def test_nba_todays_games_falls_back_to_espn(monkeypatch):
+    """A 403 from cdn.nba.com (datacenter IP block) must fall through to ESPN."""
+    import requests as requests_lib
+
+    from sports_edge.data import espn as espn_mod, nba
+
+    def blocked(*a, **k):
+        raise requests_lib.HTTPError("403 Client Error: Forbidden")
+
+    monkeypatch.setattr(nba.requests, "get", blocked)
+    monkeypatch.setattr(
+        espn_mod, "todays_games",
+        lambda cfg, day=None: [{"home_team": "Boston Celtics",
+                                "away_team": "Miami Heat", "date": "2026-06-12"}])
+    games = nba.todays_games(date(2026, 6, 12))
+    assert games[0]["home_team"] == "Boston Celtics"
+
+
+def test_nba_fetch_season_falls_back_to_espn(monkeypatch):
+    import requests as requests_lib
+
+    from sports_edge.data import espn as espn_mod, nba
+
+    def blocked(*a, **k):
+        raise requests_lib.HTTPError("403 Client Error: Forbidden")
+
+    monkeypatch.setattr(nba.requests, "get", blocked)
+    sentinel = []
+    monkeypatch.setattr(espn_mod, "fetch_season", lambda cfg, season: sentinel)
+    assert nba.fetch_season(2024) is sentinel
+
+
+def test_state_merges_team_name_spellings():
+    """History from stats.nba.com and a slate from ESPN must hit the same
+    team state despite different spellings."""
+    from sports_edge.config import NBA as NBA_CFG
+    from sports_edge.data.store import Game
+    from sports_edge.features.state import LeagueState
+
+    state = LeagueState(NBA_CFG)
+    for i in range(3):
+        state.update(Game("nba", str(i), f"2024-01-0{i + 1}", 2023,
+                          "Los Angeles Clippers", "Boston Celtics", 110, 100))
+    feats = state.features_for("LA Clippers", "Boston Celtics", "2024-01-05")
+    assert feats["elo_home"] > 1500  # the Clippers' wins are visible
+    assert feats["games_played_home"] == 3
+    assert state.team_summary("LA Clippers")["last_n"] == "3-0"
+
+
 def test_team_key_normalization():
     assert team_key("Montréal Canadiens") == team_key("Montreal Canadiens")
     assert team_key("St. Louis Blues") == team_key("St Louis Blues")
