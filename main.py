@@ -22,9 +22,12 @@ SPORT_KEYS = list(SPORTS)
 
 def cmd_fetch(args):
     cfg = get_sport(args.sport)
-    from sports_edge.data.sources import fetch_season
+    from sports_edge.data.sources import SOURCE, fetch_season
     seasons = [int(s) for s in args.seasons.split(",")] if args.seasons else cfg.seasons_default
     store = GameStore()
+    if store.ensure_source(cfg.key, SOURCE):
+        print(Fore.YELLOW + f"Data source changed; cleared old {cfg.name} games "
+              f"for a clean refetch." + Style.RESET_ALL)
     total = 0
     for season in seasons:
         print(f"Fetching {cfg.name} {season} season...", end=" ", flush=True)

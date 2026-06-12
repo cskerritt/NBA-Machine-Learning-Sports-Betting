@@ -1,4 +1,9 @@
-"""NFL and NHL data via ESPN's public scoreboard API. No API key required."""
+"""Game data for every sport via ESPN's public scoreboard API.
+
+One source for MLB, NBA, NFL, and NHL: no API key, identical response
+shapes across leagues, consistent team names, and — unlike nba.com —
+no blocking of datacenter/cloud IPs.
+"""
 
 from datetime import date, timedelta
 
@@ -9,13 +14,6 @@ from sports_edge.data.store import Game
 
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/{path}/scoreboard"
 TIMEOUT = 30
-
-# Regular-season calendar windows, by season starting year.
-SEASON_WINDOWS = {
-    "football/nfl": ((9, 1), (1, 15)),    # Sep 1 -> Jan 15 next year
-    "hockey/nhl": ((10, 1), (4, 30)),     # Oct 1 -> Apr 30 next year
-    "basketball/nba": ((10, 1), (4, 30)),  # Oct 1 -> Apr 30 next year
-}
 
 
 def _date_chunks(start: date, end: date, days: int = 28):
@@ -29,7 +27,7 @@ def _date_chunks(start: date, end: date, days: int = 28):
 def _fetch_events(path: str, start: date, end: date) -> list[dict]:
     params = {
         "dates": f"{start:%Y%m%d}-{end:%Y%m%d}",
-        "limit": 500,
+        "limit": 1000,  # a 4-week MLB chunk has ~450 games; leave headroom
         "seasontype": 2,  # regular season
     }
     resp = requests.get(SCOREBOARD_URL.format(path=path), params=params, timeout=TIMEOUT)
@@ -63,7 +61,7 @@ def _parse_event(event: dict, sport_key: str, season: int) -> Game | None:
 
 def fetch_season(cfg: SportConfig, season: int) -> list[Game]:
     """All finished regular-season games for a season (starting-year convention)."""
-    (sm, sd), (em, ed) = SEASON_WINDOWS[cfg.espn_path]
+    (sm, sd), (em, ed) = cfg.season_window
     start = date(season, sm, sd)
     end = date(season if em >= sm else season + 1, em, ed)
     end = min(end, date.today())

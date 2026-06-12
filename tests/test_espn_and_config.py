@@ -79,36 +79,57 @@ def test_current_season():
     assert current_season(NHL, date(2026, 10, 20)) == 2026
 
 
-def test_nba_todays_games_falls_back_to_espn(monkeypatch):
-    """A 403 from cdn.nba.com (datacenter IP block) must fall through to ESPN."""
-    import requests as requests_lib
+def test_all_sports_dispatch_to_espn(monkeypatch):
+    """Every sport (MLB included) routes through the single ESPN fetcher."""
+    from sports_edge.config import SPORTS
+    from sports_edge.data import espn as espn_mod, sources
 
-    from sports_edge.data import espn as espn_mod, nba
-
-    def blocked(*a, **k):
-        raise requests_lib.HTTPError("403 Client Error: Forbidden")
-
-    monkeypatch.setattr(nba.requests, "get", blocked)
-    monkeypatch.setattr(
-        espn_mod, "todays_games",
-        lambda cfg, day=None: [{"home_team": "Boston Celtics",
-                                "away_team": "Miami Heat", "date": "2026-06-12"}])
-    games = nba.todays_games(date(2026, 6, 12))
-    assert games[0]["home_team"] == "Boston Celtics"
+    seen = []
+    monkeypatch.setattr(espn_mod, "fetch_season",
+                        lambda cfg, season: seen.append((cfg.key, "fetch")) or [])
+    monkeypatch.setattr(espn_mod, "todays_games",
+                        lambda cfg, day=None: seen.append((cfg.key, "today")) or [])
+    for cfg in SPORTS.values():
+        sources.fetch_season(cfg, 2024)
+        sources.todays_games(cfg)
+        assert cfg.espn_path  # every sport has an ESPN path configured
+    assert {s for s, _ in seen} == {"mlb", "nba", "nfl", "nhl"}
 
 
-def test_nba_fetch_season_falls_back_to_espn(monkeypatch):
-    import requests as requests_lib
+def test_ensure_source_purges_on_change(tmp_path):
+    """Switching data sources must clear a sport's games: game ids are
+    source-specific, so mixing sources would duplicate every game."""
+    from sports_edge.data.store import Game, GameStore
 
-    from sports_edge.data import espn as espn_mod, nba
+    store = GameStore(tmp_path / "g.sqlite")
+    store.upsert_games([Game("nba", "0022300001", "2024-01-01", 2023,
+                             "Boston Celtics", "Miami Heat", 110, 100)])
+    # Legacy database: games exist but no recorded source -> purge.
+    assert store.ensure_source("nba", "espn") is True
+    assert store.count("nba") == 0
+    # Same source from then on -> no purge, data is kept.
+    store.upsert_games([Game("nba", "401585601", "2024-01-02", 2023,
+                             "Boston Celtics", "Miami Heat", 99, 101)])
+    assert store.ensure_source("nba", "espn") is False
+    assert store.count("nba") == 1
+    # Other sports are untouched by a purge.
+    store.upsert_games([Game("mlb", "1", "2024-05-01", 2024,
+                             "Athletics", "Seattle Mariners", 4, 2)])
+    store.ensure_source("mlb", "espn")
+    assert store.count("nba") == 1
+    store.close()
 
-    def blocked(*a, **k):
-        raise requests_lib.HTTPError("403 Client Error: Forbidden")
 
-    monkeypatch.setattr(nba.requests, "get", blocked)
-    sentinel = []
-    monkeypatch.setattr(espn_mod, "fetch_season", lambda cfg, season: sentinel)
-    assert nba.fetch_season(2024) is sentinel
+def test_update_history_records_source(tmp_path, monkeypatch):
+    from sports_edge.config import NHL as NHL_CFG
+    from sports_edge.data import sources
+    from sports_edge.data.store import GameStore
+
+    store = GameStore(tmp_path / "g.sqlite")
+    monkeypatch.setattr(sources, "fetch_season", lambda cfg, season: [])
+    sources.update_history(NHL_CFG, store, today=date(2026, 1, 10))
+    assert store.ensure_source("nhl", "espn") is False  # already recorded
+    store.close()
 
 
 def test_state_merges_team_name_spellings():

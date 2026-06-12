@@ -27,9 +27,10 @@ automation for a daily run.
 
 ## How it works
 
-1. **Data** — MLB from the MLB Stats API, NBA from stats.nba.com, NFL & NHL
-   from ESPN's public scoreboard API. All free, no keys. Results land in a
-   local SQLite database; daily runs only re-download the in-progress season.
+1. **Data** — all four leagues from ESPN's public scoreboard API: free, no
+   keys, identical response shapes, and reachable from cloud hosts (nba.com
+   blocks datacenter IPs). Results land in a local SQLite database; daily
+   runs only re-download the in-progress season.
 2. **Features** — games are replayed chronologically through a `LeagueState`:
    Elo ratings (FiveThirtyEight-style margin-of-victory multiplier, per-sport
    K-factor and home advantage, between-season regression), rolling win% and
@@ -128,7 +129,7 @@ market edge, and highlighted +EV bets sized to your bankroll.
 main.py                     CLI (fetch / train / predict / backtest / daily / web)
 sports_edge/
   config.py                 per-sport Elo + feature parameters, season calendar
-  data/                     MLB, NBA, ESPN (NFL/NHL) fetchers; SQLite store
+  data/                     ESPN fetcher (all sports); SQLite store
   features/                 Elo engine, incremental LeagueState, dataset builder
   models/                   training (calibrated XGBoost + Elo blend, score
                             regressors) and prediction
