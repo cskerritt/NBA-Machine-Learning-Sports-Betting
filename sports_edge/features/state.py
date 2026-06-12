@@ -8,6 +8,7 @@ from datetime import date, datetime
 from sports_edge.config import SportConfig
 from sports_edge.data.store import Game
 from sports_edge.features.elo import Elo
+from sports_edge.teams import team_key
 
 FEATURE_NAMES = [
     "elo_home", "elo_away", "elo_diff", "elo_prob_home",
@@ -89,9 +90,13 @@ class LeagueState:
         self.current_season: int | None = None
 
     def _form(self, team: str) -> _TeamForm:
-        if team not in self.forms:
-            self.forms[team] = _TeamForm(self.cfg.rolling_window)
-        return self.forms[team]
+        # Forms and Elo are keyed by canonical name so that data sources
+        # with different spellings (ESPN "LA Clippers" vs stats.nba.com
+        # "Los Angeles Clippers") update the same team.
+        key = team_key(team)
+        if key not in self.forms:
+            self.forms[key] = _TeamForm(self.cfg.rolling_window)
+        return self.forms[key]
 
     def _rest_days(self, form: _TeamForm, game_date: date) -> int:
         if form.last_game is None:
@@ -101,6 +106,7 @@ class LeagueState:
     def features_for(self, home: str, away: str, game_date: str) -> dict[str, float]:
         """Pre-game features. Must be called BEFORE update() for that game."""
         d = parse_date(game_date)
+        home, away = team_key(home), team_key(away)
         hf, af = self._form(home), self._form(away)
         rest_h, rest_a = self._rest_days(hf, d), self._rest_days(af, d)
         return {
@@ -136,7 +142,7 @@ class LeagueState:
         f = self._form(team)
         wins = sum(1 for r in f.results if r[0])
         ratings = sorted(self.elo.ratings.values(), reverse=True)
-        rating = self.elo.rating(team)
+        rating = self.elo.rating(team_key(team))
         rank = 1 + sum(1 for r in ratings if r > rating) if self.elo.ratings else None
         return {
             "elo": round(rating, 1),
@@ -162,7 +168,8 @@ class LeagueState:
         """Apply a finished game's result to the state."""
         self.rollover_if_new_season(game.season)
 
-        self.elo.update(game.home_team, game.away_team, game.home_score, game.away_score)
+        self.elo.update(team_key(game.home_team), team_key(game.away_team),
+                        game.home_score, game.away_score)
 
         d = parse_date(game.date)
         hf, af = self._form(game.home_team), self._form(game.away_team)

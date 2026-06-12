@@ -4,33 +4,14 @@ Set THE_ODDS_API_KEY in your environment, or pass --api-key on the CLI.
 """
 
 import os
-import unicodedata
 
 import requests
 
 from sports_edge.config import SportConfig
+from sports_edge.teams import team_key
 
 BASE_URL = "https://api.the-odds-api.com/v4/sports/{sport}/odds"
 TIMEOUT = 30
-
-# Map known odds-api spellings to the names used by our data sources.
-TEAM_ALIASES = {
-    "la clippers": "los angeles clippers",
-    "oakland athletics": "athletics",
-    "los angeles angels of anaheim": "los angeles angels",
-    "st louis cardinals": "st. louis cardinals",
-    "st louis blues": "st. louis blues",
-    "washington football team": "washington commanders",
-}
-
-
-def team_key(name: str) -> str:
-    """Canonical key for matching team names across data sources:
-    accent-stripped, lowercase, no periods, aliases applied."""
-    s = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
-    s = " ".join(s.lower().replace(".", "").split())
-    s = TEAM_ALIASES.get(s, s)
-    return s.replace(".", "")
 
 
 def fetch_moneylines(cfg: SportConfig, api_key: str | None = None,

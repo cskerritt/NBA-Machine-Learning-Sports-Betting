@@ -1,4 +1,10 @@
-"""NBA data via stats.nba.com (history) and cdn.nba.com (today's slate)."""
+"""NBA data via stats.nba.com (history) and cdn.nba.com (today's slate).
+
+Both nba.com hosts block many datacenter/cloud IPs (403) even with
+browser-like headers, so every call transparently falls back to ESPN's
+scoreboard API, which serves the same games. Team-name spelling differences
+between the sources are reconciled by sports_edge.teams.team_key.
+"""
 
 from datetime import date
 
@@ -10,16 +16,26 @@ GAMELOG_URL = "https://stats.nba.com/stats/leaguegamelog"
 SCOREBOARD_URL = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
 TIMEOUT = 60
 
-# stats.nba.com rejects requests without browser-like headers
-STATS_HEADERS = {
+# nba.com rejects requests without browser-like headers
+BROWSER_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"),
+    "Accept": "application/json",
+    "Accept-Language": "en-US,en;q=0.9",
+}
+STATS_HEADERS = {
+    **BROWSER_HEADERS,
     "Referer": "https://stats.nba.com/",
     "Origin": "https://stats.nba.com",
     "x-nba-stats-origin": "stats",
     "x-nba-stats-token": "true",
-    "Accept": "application/json",
 }
+
+
+def _espn():
+    from sports_edge.config import NBA
+    from sports_edge.data import espn
+    return espn, NBA
 
 
 def _season_str(season: int) -> str:
@@ -29,6 +45,14 @@ def _season_str(season: int) -> str:
 
 def fetch_season(season: int) -> list[Game]:
     """All finished regular-season games for a season (starting-year convention)."""
+    try:
+        return _fetch_season_stats_nba(season)
+    except requests.RequestException:
+        espn, cfg = _espn()
+        return espn.fetch_season(cfg, season)
+
+
+def _fetch_season_stats_nba(season: int) -> list[Game]:
     params = {
         "Counter": 0, "DateFrom": "", "DateTo": "", "Direction": "ASC",
         "LeagueID": "00", "PlayerOrTeam": "T", "Season": _season_str(season),
@@ -71,9 +95,13 @@ def fetch_season(season: int) -> list[Game]:
 
 
 def todays_games(day: date | None = None) -> list[dict]:
-    """Today's NBA slate from the public CDN scoreboard (today only)."""
-    resp = requests.get(SCOREBOARD_URL, timeout=TIMEOUT)
-    resp.raise_for_status()
+    """Today's NBA slate, from the nba.com CDN with ESPN fallback."""
+    try:
+        resp = requests.get(SCOREBOARD_URL, headers=BROWSER_HEADERS, timeout=TIMEOUT)
+        resp.raise_for_status()
+    except requests.RequestException:
+        espn, cfg = _espn()
+        return espn.todays_games(cfg, day)
     board = resp.json().get("scoreboard", {})
     games = []
     for g in board.get("games", []):

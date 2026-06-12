@@ -48,6 +48,7 @@ NBA = SportConfig(
     elo_season_regression=0.25,
     rolling_window=10,
     season_start_month=10,
+    espn_path="basketball/nba",  # fallback when nba.com blocks the host
     seasons_default=[2020, 2021, 2022, 2023, 2024, 2025],
 )
 
