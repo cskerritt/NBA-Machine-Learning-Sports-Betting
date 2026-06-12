@@ -108,4 +108,3 @@ venv.bak/
 
 # Sports Edge local artifacts (anchored: must not match sports_edge/data etc.)
 /data/
-/models_store/

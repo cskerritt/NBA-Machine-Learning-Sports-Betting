@@ -165,6 +165,10 @@ def cmd_daily(args):
 
 def cmd_web(args):
     from web.app import app
+    if not args.no_autorun and not args.debug:
+        from sports_edge.scheduler import start_background_daily
+        start_background_daily()
+        print("Background daily refresh enabled (disable with --no-autorun).")
     app.run(host=args.host, port=args.port, debug=args.debug)
 
 
@@ -209,10 +213,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--api-key", help="the-odds-api.com key (or set THE_ODDS_API_KEY)")
     p.set_defaults(func=cmd_daily)
 
-    p = sub.add_parser("web", help="Run the web dashboard")
+    p = sub.add_parser("web", help="Run the web dashboard (self-updates daily)")
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=5000)
     p.add_argument("--debug", action="store_true")
+    p.add_argument("--no-autorun", action="store_true",
+                   help="Don't bootstrap/refresh data in a background thread")
     p.set_defaults(func=cmd_web)
     return parser
 

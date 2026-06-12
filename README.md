@@ -101,6 +101,22 @@ trigger it manually from the Actions tab.
 0 9 * * * cd /path/to/repo && python main.py daily >> daily.log 2>&1
 ```
 
+## Hosting (Railway / Docker / any PaaS)
+
+A single web service is all you need — no separate worker or cron service.
+`python main.py web` starts a background thread that bootstraps the database
+and models on first boot (a few minutes) and then re-runs the daily pipeline
+every day at 13:00 UTC (configurable via `SPORTS_EDGE_DAILY_UTC_HOUR`;
+disable entirely with `--no-autorun`). The included `Procfile` starts the
+dashboard bound to `$PORT`.
+
+Recommended Railway setup:
+
+1. **Volume** mounted at `/app/data` — the database *and* trained models live
+   under `data/`, so one volume persists everything across deploys
+2. **Variables**: `THE_ODDS_API_KEY` for live odds / EV / stakes
+3. **Networking**: generate a domain to expose the dashboard
+
 ## Backtesting
 
 ```bash
