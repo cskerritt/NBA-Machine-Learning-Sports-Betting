@@ -106,6 +106,6 @@ venv.bak/
 .idea
 .DS_Store
 
-# Sports Edge local artifacts
-data/
-models_store/
+# Sports Edge local artifacts (anchored: must not match sports_edge/data etc.)
+/data/
+/models_store/
