@@ -1,12 +1,15 @@
 """Per-sport configuration and filesystem paths."""
 
+import os
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = ROOT_DIR / "data"
-MODELS_DIR = ROOT_DIR / "models_store"
+# Everything mutable lives under ./data so one mounted volume persists it
+# all on hosted deploys (data dir is overridable via SPORTS_EDGE_DATA_DIR).
+DATA_DIR = Path(os.environ.get("SPORTS_EDGE_DATA_DIR", ROOT_DIR / "data"))
+MODELS_DIR = DATA_DIR / "models"
 REPORTS_DIR = ROOT_DIR / "reports"
 DB_PATH = DATA_DIR / "games.sqlite"
 

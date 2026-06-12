@@ -48,10 +48,13 @@ class Game:
 
 
 class GameStore:
-    def __init__(self, db_path: Path | str = DB_PATH):
-        self.db_path = Path(db_path)
+    def __init__(self, db_path: Path | str | None = None):
+        # Default resolved at call time so env/test overrides take effect.
+        self.db_path = Path(db_path) if db_path is not None else Path(DB_PATH)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(self.db_path)
+        # timeout: wait out brief write locks when the background daily
+        # refresh and web requests touch the database concurrently.
+        self.conn = sqlite3.connect(self.db_path, timeout=30)
         self.conn.executescript(SCHEMA)
 
     def upsert_games(self, games: list[Game]) -> int:
