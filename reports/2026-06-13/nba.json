@@ -1,0 +1,50 @@
+{
+  "sport": "nba",
+  "date": "2026-06-13",
+  "games": [
+    {
+      "home_team": "San Antonio Spurs",
+      "away_team": "New York Knicks",
+      "date": "2026-06-14",
+      "home_win_prob": 0.6883496738640679,
+      "model_prob": 0.713640550772349,
+      "elo_prob": 0.6883496738640679,
+      "pred_margin": 4.843307971954346,
+      "pred_total": 219.3354949951172,
+      "pred_home_score": 112.08940148353577,
+      "pred_away_score": 107.24609351158142,
+      "home_form": {
+        "elo": 1764.4,
+        "elo_rank": 1,
+        "last_n": "7-3",
+        "streak": "W3",
+        "season_record": "71-22",
+        "ppg": 118.0,
+        "papg": 108.7
+      },
+      "away_form": {
+        "elo": 1706.8,
+        "elo_rank": 3,
+        "last_n": "7-3",
+        "streak": "W3",
+        "season_record": "62-32",
+        "ppg": 113.5,
+        "papg": 101.8
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "San Antonio Spurs",
+      "pick_prob": 0.6883496738640679,
+      "edge": null,
+      "confidence": "STRONG",
+      "best_bet": null
+    }
+  ]
+}
