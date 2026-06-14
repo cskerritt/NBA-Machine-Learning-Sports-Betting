@@ -1,0 +1,50 @@
+{
+  "sport": "nhl",
+  "date": "2026-06-14",
+  "games": [
+    {
+      "home_team": "Vegas Golden Knights",
+      "away_team": "Carolina Hurricanes",
+      "date": "2026-06-15",
+      "home_win_prob": 0.49224282259803787,
+      "model_prob": 0.4483193059762319,
+      "elo_prob": 0.49224282259803787,
+      "pred_margin": -0.2044195532798767,
+      "pred_total": 5.302295207977295,
+      "pred_home_score": 2.548937827348709,
+      "pred_away_score": 2.753357380628586,
+      "home_form": {
+        "elo": 1514.6,
+        "elo_rank": 8,
+        "last_n": "7-3",
+        "streak": "W2",
+        "season_record": "43-46",
+        "ppg": 3.6,
+        "papg": 2.7
+      },
+      "away_form": {
+        "elo": 1553.0,
+        "elo_rank": 2,
+        "last_n": "8-2",
+        "streak": "W5",
+        "season_record": "57-30",
+        "ppg": 3.5,
+        "papg": 2.3
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Carolina Hurricanes",
+      "pick_prob": 0.5077571774019621,
+      "edge": null,
+      "confidence": "TOSS-UP",
+      "best_bet": null
+    }
+  ]
+}
