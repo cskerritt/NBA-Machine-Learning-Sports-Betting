@@ -1,0 +1,50 @@
+{
+  "sport": "mlb",
+  "date": "2026-07-14",
+  "games": [
+    {
+      "home_team": "National All-Stars",
+      "away_team": "American All-Stars",
+      "date": "2026-07-15",
+      "home_win_prob": 0.5230612070849016,
+      "model_prob": 0.4691919982433319,
+      "elo_prob": 0.5290466747339648,
+      "pred_margin": 0.0807381123304367,
+      "pred_total": 9.450084686279297,
+      "pred_home_score": 4.765411399304867,
+      "pred_away_score": 4.68467328697443,
+      "home_form": {
+        "elo": 1498.1,
+        "elo_rank": 20,
+        "last_n": "1-4",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 3.2,
+        "papg": 4.2
+      },
+      "away_form": {
+        "elo": 1501.9,
+        "elo_rank": 15,
+        "last_n": "4-1",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 4.2,
+        "papg": 3.2
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "National All-Stars",
+      "pick_prob": 0.5230612070849016,
+      "edge": null,
+      "confidence": "TOSS-UP",
+      "best_bet": null
+    }
+  ]
+}
