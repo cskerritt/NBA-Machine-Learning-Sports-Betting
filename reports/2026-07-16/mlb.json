@@ -1,0 +1,50 @@
+{
+  "sport": "mlb",
+  "date": "2026-07-16",
+  "games": [
+    {
+      "home_team": "Philadelphia Phillies",
+      "away_team": "New York Mets",
+      "date": "2026-07-16",
+      "home_win_prob": 0.5713067459232568,
+      "model_prob": 0.5120925803979238,
+      "elo_prob": 0.5778860976482938,
+      "pred_margin": 0.8665149807929993,
+      "pred_total": 9.805656433105469,
+      "pred_home_score": 5.336085706949234,
+      "pred_away_score": 4.469570726156235,
+      "home_form": {
+        "elo": 1516.5,
+        "elo_rank": 6,
+        "last_n": "12-8",
+        "streak": "W2",
+        "season_record": "56-50",
+        "ppg": 4.8,
+        "papg": 5.0
+      },
+      "away_form": {
+        "elo": 1485.9,
+        "elo_rank": 26,
+        "last_n": "6-14",
+        "streak": "L3",
+        "season_record": "43-62",
+        "ppg": 4.3,
+        "papg": 6.0
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Philadelphia Phillies",
+      "pick_prob": 0.5713067459232568,
+      "edge": null,
+      "confidence": "TOSS-UP",
+      "best_bet": null
+    }
+  ]
+}
