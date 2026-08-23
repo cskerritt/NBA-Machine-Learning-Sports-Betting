@@ -1,0 +1,50 @@
+{
+  "sport": "nfl",
+  "date": "2026-08-23",
+  "games": [
+    {
+      "home_team": "Tennessee Titans",
+      "away_team": "Seattle Seahawks",
+      "date": "2026-08-24",
+      "home_win_prob": 0.3881288330679604,
+      "model_prob": 0.4214339256286621,
+      "elo_prob": 0.31041695042632306,
+      "pred_margin": -9.367493629455566,
+      "pred_total": 41.93482971191406,
+      "pred_home_score": 16.283668041229248,
+      "pred_away_score": 25.651161670684814,
+      "home_form": {
+        "elo": 1398.1,
+        "elo_rank": 34,
+        "last_n": "2-3",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 22.8,
+        "papg": 30.0
+      },
+      "away_form": {
+        "elo": 1584.7,
+        "elo_rank": 2,
+        "last_n": "5-0",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 26.6,
+        "papg": 15.0
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Seattle Seahawks",
+      "pick_prob": 0.6118711669320396,
+      "edge": null,
+      "confidence": "LEAN",
+      "best_bet": null
+    }
+  ]
+}
