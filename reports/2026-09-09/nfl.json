@@ -1,0 +1,50 @@
+{
+  "sport": "nfl",
+  "date": "2026-09-09",
+  "games": [
+    {
+      "home_team": "Seattle Seahawks",
+      "away_team": "New England Patriots",
+      "date": "2026-09-10",
+      "home_win_prob": 0.5758760781387151,
+      "model_prob": 0.5526076853275299,
+      "elo_prob": 0.6301689946981474,
+      "pred_margin": 0.1706710308790207,
+      "pred_total": 34.289188385009766,
+      "pred_home_score": 17.229929707944393,
+      "pred_away_score": 17.059258677065372,
+      "home_form": {
+        "elo": 1584.7,
+        "elo_rank": 2,
+        "last_n": "5-0",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 26.6,
+        "papg": 15.0
+      },
+      "away_form": {
+        "elo": 1540.1,
+        "elo_rank": 10,
+        "last_n": "4-1",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 31.0,
+        "papg": 16.4
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Seattle Seahawks",
+      "pick_prob": 0.5758760781387151,
+      "edge": null,
+      "confidence": "LEAN",
+      "best_bet": null
+    }
+  ]
+}
