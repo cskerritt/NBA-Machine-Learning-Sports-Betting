@@ -1,0 +1,50 @@
+{
+  "sport": "nfl",
+  "date": "2026-09-10",
+  "games": [
+    {
+      "home_team": "Los Angeles Rams",
+      "away_team": "San Francisco 49ers",
+      "date": "2026-09-11",
+      "home_win_prob": 0.6056554548969919,
+      "model_prob": 0.6025284727414449,
+      "elo_prob": 0.6114627074715792,
+      "pred_margin": 3.2249274253845215,
+      "pred_total": 41.23249435424805,
+      "pred_home_score": 22.228710889816284,
+      "pred_away_score": 19.003783464431763,
+      "home_form": {
+        "elo": 1575.3,
+        "elo_rank": 3,
+        "last_n": "3-2",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 34.6,
+        "papg": 30.0
+      },
+      "away_form": {
+        "elo": 1544.6,
+        "elo_rank": 8,
+        "last_n": "4-1",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 30.6,
+        "papg": 24.2
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Los Angeles Rams",
+      "pick_prob": 0.6056554548969919,
+      "edge": null,
+      "confidence": "LEAN",
+      "best_bet": null
+    }
+  ]
+}
