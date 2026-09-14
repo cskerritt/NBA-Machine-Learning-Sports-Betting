@@ -1,0 +1,50 @@
+{
+  "sport": "nfl",
+  "date": "2026-09-14",
+  "games": [
+    {
+      "home_team": "Kansas City Chiefs",
+      "away_team": "Denver Broncos",
+      "date": "2026-09-15",
+      "home_win_prob": 0.49433813844367624,
+      "model_prob": 0.4886711736520131,
+      "elo_prob": 0.5048625016281936,
+      "pred_margin": -3.1972692012786865,
+      "pred_total": 39.63865661621094,
+      "pred_home_score": 18.220693707466125,
+      "pred_away_score": 21.417962908744812,
+      "home_form": {
+        "elo": 1519.9,
+        "elo_rank": 15,
+        "last_n": "0-5",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 11.4,
+        "papg": 19.2
+      },
+      "away_form": {
+        "elo": 1564.5,
+        "elo_rank": 5,
+        "last_n": "4-1",
+        "streak": "-",
+        "season_record": "0-0",
+        "ppg": 23.4,
+        "papg": 18.6
+      },
+      "home_ml": null,
+      "away_ml": null,
+      "home_book": null,
+      "away_book": null,
+      "home_ev": null,
+      "away_ev": null,
+      "home_kelly": null,
+      "away_kelly": null,
+      "home_fair_prob": null,
+      "pick": "Denver Broncos",
+      "pick_prob": 0.5056618615563238,
+      "edge": null,
+      "confidence": "TOSS-UP",
+      "best_bet": null
+    }
+  ]
+}
